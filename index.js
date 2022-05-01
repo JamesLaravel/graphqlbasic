@@ -9,6 +9,7 @@ const {
   GraphQLObjectType,
   GraphQLSchema,
   GraphQLNonNull,
+  buildSchema,
 } = require("graphql");
 const mongoose = require("mongoose");
 const personModel = require("./models/person.model");
@@ -74,7 +75,29 @@ app.use(bodyParser.json());
 app.use(
   "/graphql",
   graphqlHTTP({
-    schema,
+    schema: buildSchema(`
+        type RootQuery {
+            events: [String!]!
+        }
+
+        type RootMutation {
+            createEvent(name: String): String
+        }
+
+        schema {
+            query: RootQuery
+            mutation: RootMutation
+        }
+    `),
+    rootValue: {
+      events: () => {
+        return ["Romantic", "Cooking", "Sailing", "All-Night Coding"];
+      },
+      createEvent: (args) => {
+        const eventName = args.name;
+        return eventName;
+      },
+    },
     graphiql: true,
   })
 );
